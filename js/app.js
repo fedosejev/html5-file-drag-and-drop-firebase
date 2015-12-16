@@ -3,10 +3,11 @@ var HTML_FILE_NAME = '';
 function handleFileContent(fileOnLoadEvent) {
   var html = fileOnLoadEvent.target.result;
   var id = HashID.generate();
+  var WEBSITE_URL = 'http://fedosejev.github.io/html5-file-drag-and-drop-firebase/';
 
   Storage.set(id, html);
   Storage.get(id);
-  window.history.pushState('', '', '/#' + id);
+  window.history.pushState('', '', WEBSITE_URL + '#' + id);
 }
 
 var Storage = (function () {
