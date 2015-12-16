@@ -10,7 +10,9 @@ function handleFileContent(fileOnLoadEvent) {
 }
 
 var Storage = (function () {
-  var firebaseReference = new Firebase('https://publish-html.firebaseio.com/');
+  var FIREBASE_URL = 'https://publish-html.firebaseio.com/';
+
+  var firebaseReference = new Firebase(FIREBASE_URL);
 
   function set(id, html) {
     firebaseReference.child(id).set({
