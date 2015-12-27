@@ -1,98 +1,102 @@
-var HTML_FILE_NAME = '';
+(function () {
 
-function handleFileContent(fileOnLoadEvent) {
-  var html = fileOnLoadEvent.target.result;
-  var id = HashID.generate();
-  var WEBSITE_URL = 'http://fedosejev.github.io/html5-file-drag-and-drop-firebase/';
+  var HTML_FILE_NAME = '';
 
-  Storage.set(id, html);
-  Storage.get(id);
-  window.history.pushState('', '', WEBSITE_URL + '#' + id);
-}
+  function handleFileContent(fileOnLoadEvent) {
+    var html = fileOnLoadEvent.target.result;
+    var id = HashID.generate();
+    var WEBSITE_URL = 'http://fedosejev.github.io/html5-file-drag-and-drop-firebase/';
 
-var Storage = (function () {
-  var FIREBASE_URL = 'https://publish-html.firebaseio.com/';
-
-  var firebaseReference = new Firebase(FIREBASE_URL);
-
-  function set(id, html) {
-    firebaseReference.child(id).set({
-      id: id,
-      html: html,
-      dateCreated: new Date()
-    });
+    Storage.set(id, html);
+    Storage.get(id);
+    window.history.pushState('', '', WEBSITE_URL + '#' + id);
   }
 
-  function get(id) {
-    firebaseReference.child(id).once('value', function(snapshot) {
-      var jsonDocument = snapshot.val();
+  var Storage = (function () {
+    var FIREBASE_URL = 'https://publish-html.firebaseio.com/';
 
-      if (jsonDocument) {
-        document.querySelector('html').innerHTML = jsonDocument.html;
-      } else {
-        hideLoadingView();
-        showDocumentNotFound();
-      }
-    });
+    var firebaseReference = new Firebase(FIREBASE_URL);
+
+    function set(id, html) {
+      firebaseReference.child(id).set({
+        id: id,
+        html: html,
+        dateCreated: new Date()
+      });
+    }
+
+    function get(id) {
+      firebaseReference.child(id).once('value', function (snapshot) {
+        var jsonDocument = snapshot.val();
+
+        if (jsonDocument) {
+          document.querySelector('html').innerHTML = jsonDocument.html;
+        } else {
+          hideLoadingView();
+          showDocumentNotFound();
+        }
+      });
+    }
+
+    return {
+      set: set,
+      get: get
+    };
+  })();
+
+  function showDocumentNotFound() {
+    document.querySelector('[data-not-found]').classList.remove('hide');;
   }
 
-  return {
-    set: set,
-    get: get
-  };
+  function handleFileSelect(dropEvent) {
+    dropEvent.stopPropagation();
+    dropEvent.preventDefault();
+
+    var files = dropEvent.dataTransfer.files; // FileList object.
+    var firstFile = files[0];
+
+    HTML_FILE_NAME = firstFile.name.replace('.html', '');
+
+    var fileReader = new FileReader();
+    fileReader.onload = handleFileContent;
+    fileReader.readAsText(firstFile);
+  }
+
+  function handleDragOver(dragOverEvent) {
+    dragOverEvent.stopPropagation();
+    dragOverEvent.preventDefault();
+    dragOverEvent.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+  }
+
+  function showLandingView() {
+    document.querySelector('[data-landing]').classList.remove('hide');
+  }
+
+  function showLoadingView() {
+    document.querySelector('[data-loading]').classList.remove('hide');
+  }
+
+  function hideLoadingView() {
+    document.querySelector('[data-loading]').classList.add('hide');
+  }
+
+  function getHashId() {
+    return window.location.hash.replace('#', '');
+  }
+
+  document.addEventListener('DOMContentLoaded', function handleDOMContentLoaded() {
+    var dropZoneElement = document.querySelector('html');
+    dropZoneElement.addEventListener('dragover', handleDragOver, false);
+    dropZoneElement.addEventListener('drop', handleFileSelect, false);
+
+    var hash = getHashId();
+
+    if (hash) {
+      showLoadingView();
+      Storage.get(hash);
+    } else {
+      showLandingView();
+    }
+  });
+
 })();
-
-function showDocumentNotFound() {
-  document.querySelector('[data-not-found]').classList.remove('hide');;
-}
-
-function handleFileSelect(dropEvent) {
-  dropEvent.stopPropagation();
-  dropEvent.preventDefault();
-
-  var files = dropEvent.dataTransfer.files; // FileList object.
-  var firstFile = files[0];
-
-  HTML_FILE_NAME = firstFile.name.replace('.html', '');
-
-  var fileReader = new FileReader();
-  fileReader.onload = handleFileContent;
-  fileReader.readAsText(firstFile);
-}
-
-function handleDragOver(dragOverEvent) {
-  dragOverEvent.stopPropagation();
-  dragOverEvent.preventDefault();
-  dragOverEvent.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-}
-
-function showLandingView() {
-  document.querySelector('[data-landing]').classList.remove('hide');
-}
-
-function showLoadingView() {
-  document.querySelector('[data-loading]').classList.remove('hide');
-}
-
-function hideLoadingView() {
-  document.querySelector('[data-loading]').classList.add('hide');
-}
-
-function getHashId() {
-  return window.location.hash.replace('#', '');
-}
-
-document.addEventListener('DOMContentLoaded', function handleDOMContentLoaded() {
-  var dropZoneElement = document.querySelector('html');
-  dropZoneElement.addEventListener('dragover', handleDragOver, false);
-  dropZoneElement.addEventListener('drop', handleFileSelect, false);
-
-  var hash = getHashId();
-
-  if (hash) {
-    showLoadingView();
-    Storage.get(hash);
-  } else {
-    showLandingView();
-  }
-});
